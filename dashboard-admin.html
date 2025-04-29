@@ -3,196 +3,299 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Department Admin Dashboard - Crime Reporting System</title>
+    <title>Admin Dashboard - Crime Reporting System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="styles.css" rel="stylesheet">
-    <!-- Leaflet CSS for maps -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="styles.css" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-bottom: 20px;
+        }
+        .station-marker {
+            background-color: #28a745;
+            border-radius: 50%;
+            width: 12px;
+            height: 12px;
+            border: 2px solid white;
+        }
+        .report-marker {
+            background-color: #dc3545;
+            border-radius: 50%;
+            width: 8px;
+            height: 8px;
+            border: 2px solid white;
+        }
+        .map-container {
+            height: 400px;
+            margin-bottom: 20px;
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand" href="#">Crime Reporting System</a>
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-shield-alt me-2"></i>Crime Reporting System
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
+                <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
                         <a class="nav-link active" href="dashboard-admin.html">Dashboard</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#stationModal">Manage Stations</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" data-bs-toggle="modal" data-bs-target="#officerModal">Manage Officers</a>
+                        <button class="btn btn-outline-light ms-2" onclick="handleLogout()">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </button>
                     </li>
                 </ul>
-                <div class="d-flex">
-                    <button class="btn btn-outline-light" id="logoutBtn">Logout</button>
-                </div>
             </div>
         </div>
     </nav>
 
-    <div class="container mt-4">
+    <div class="container-fluid py-4">
         <div class="row">
-            <div class="col-12">
-                <h2 class="mb-4">Department Admin Dashboard</h2>
-            </div>
-        </div>
-
-        <!-- Statistics Cards -->
-        <div class="row mb-4">
+            <!-- Left Sidebar -->
             <div class="col-md-3">
-                <div class="card">
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Quick Actions</h5>
+                    </div>
                     <div class="card-body">
-                        <h5 class="card-title">Total Reports</h5>
-                        <p class="card-text" id="totalReports">0</p>
+                        <button class="btn btn-primary w-100 mb-2" data-bs-toggle="modal" data-bs-target="#createStationModal">
+                            <i class="fas fa-plus me-2"></i>Create Police Station
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Recent Reports -->
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Recent Reports (Last Hour)</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="recentReports" class="list-group">
+                            <div class="text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card">
+
+            <!-- Main Content -->
+            <div class="col-md-9">
+                <!-- Map Section -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Crime & Police Station Map</h5>
+                    </div>
                     <div class="card-body">
-                        <h5 class="card-title">Active Cases</h5>
-                        <p class="card-text" id="activeCases">0</p>
+                        <div id="map" class="map-container"></div>
                     </div>
                 </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card">
-                    <div class="card-body">
-                        <h5 class="card-title">Police Stations</h5>
-                        <p class="card-text" id="totalStations">0</p>
+
+                <!-- Charts Section -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0">Crime Types Distribution</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="crimeTypeChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0">Crime Hotspots</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="crimeLocationChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div class="col-md-3">
+
+                <!-- All Reports Table -->
                 <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">All Reports</h5>
+                    </div>
                     <div class="card-body">
-                        <h5 class="card-title">Police Officers</h5>
-                        <p class="card-text" id="totalOfficers">0</p>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Report ID</th>
+                                        <th>Crime Type</th>
+                                        <th>Description</th>
+                                        <th>Status</th>
+                                        <th>Police Station</th>
+                                        <th>Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="reportsTableBody">
+                                    <tr>
+                                        <td colspan="7" class="text-center">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Police Stations -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <h4>Police Stations</h4>
-                <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Station ID</th>
-                                <th>Name</th>
-                                <th>Location</th>
-                                <th>Contact</th>
-                                <th>Officers</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="stationsTable">
-                            <!-- Stations will be loaded here -->
-                        </tbody>
-                    </table>
+    <!-- Create Police Station Modal -->
+    <div class="modal fade" id="createStationModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Create Police Station</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="stationForm">
+                        <div class="mb-3">
+                            <label for="stationName" class="form-label">Station Name</label>
+                            <input type="text" class="form-control" id="stationName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="stationLocation" class="form-label">Location</label>
+                            <input type="text" class="form-control" id="stationLocation" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="stationLatitude" class="form-label">Latitude</label>
+                            <input type="number" step="any" class="form-control" id="stationLatitude" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="stationLongitude" class="form-label">Longitude</label>
+                            <input type="number" step="any" class="form-control" id="stationLongitude" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="stationHead" class="form-label">Station Head</label>
+                            <select class="form-select" id="stationHead" required>
+                                <option value="">Select Station Head</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="createPoliceStation()">Create Station</button>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Police Officers -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <h4>Police Officers</h4>
-                <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Officer ID</th>
-                                <th>Name</th>
-                                <th>Station</th>
-                                <th>Contact</th>
-                                <th>Status</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="officersTable">
-                            <!-- Officers will be loaded here -->
-                        </tbody>
-                    </table>
+    <!-- Crime Statistics Modal -->
+    <div class="modal fade" id="crimeStatsModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Crime Statistics</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
-            </div>
-        </div>
-
-        <!-- Police Station Modal -->
-        <div class="modal fade" id="stationModal" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Manage Police Station</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="stationForm">
-                            <input type="hidden" id="stationId">
-                            <div class="mb-3">
-                                <label class="form-label">Station Name</label>
-                                <input type="text" class="form-control" id="stationName" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Location</label>
-                                <input type="text" class="form-control" id="stationLocation" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Contact Number</label>
-                                <input type="tel" class="form-control" id="stationContact" required>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Save Station</button>
-                        </form>
-                        <div id="stationAlert" class="alert mt-3" style="display: none;"></div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <canvas id="crimeTypeChart"></canvas>
+                        </div>
+                        <div class="col-md-6">
+                            <canvas id="crimeLocationChart"></canvas>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Police Officer Modal -->
-        <div class="modal fade" id="officerModal" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Manage Police Officer</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="officerForm">
-                            <input type="hidden" id="officerId">
-                            <div class="mb-3">
-                                <label class="form-label">Name</label>
-                                <input type="text" class="form-control" id="officerName" required>
+    <!-- Edit Report Modal -->
+    <div class="modal fade" id="editReportModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Report</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editReportForm">
+                        <input type="hidden" id="editReportId">
+                        <div class="mb-3">
+                            <label for="editCrimeType" class="form-label">Crime Type</label>
+                            <select class="form-select" id="editCrimeType" required>
+                                <option value="theft">Theft</option>
+                                <option value="assault">Assault</option>
+                                <option value="vandalism">Vandalism</option>
+                                <option value="burglary">Burglary</option>
+                                <option value="fraud">Fraud</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editDescription" class="form-label">Description</label>
+                            <textarea class="form-control" id="editDescription" rows="4" required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editStatus" class="form-label">Status</label>
+                            <select class="form-select" id="editStatus" required>
+                                <option value="pending">Pending</option>
+                                <option value="under_progress">Under Progress</option>
+                                <option value="concluded">Concluded</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editPoliceStation" class="form-label">Police Station</label>
+                            <select class="form-select" id="editPoliceStation">
+                                <option value="">Not Assigned</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editAddress" class="form-label">Location Address</label>
+                            <input type="text" class="form-control" id="editAddress" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Select Location on Map</label>
+                            <div id="editMap" style="height: 300px; border-radius: 8px;"></div>
+                            <small class="text-muted">Click on the map to update the location</small>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="editLatitude" class="form-label">Latitude</label>
+                                <input type="text" class="form-control" id="editLatitude" readonly required>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">Police Station</label>
-                                <select class="form-select" id="officerStation" required>
-                                    <!-- Stations will be loaded here -->
-                                </select>
+                            <div class="col-md-6">
+                                <label for="editLongitude" class="form-label">Longitude</label>
+                                <input type="text" class="form-control" id="editLongitude" readonly required>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">Contact Number</label>
-                                <input type="tel" class="form-control" id="officerContact" required>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Status</label>
-                                <select class="form-select" id="officerStatus" required>
-                                    <option value="active">Active</option>
-                                    <option value="inactive">Inactive</option>
-                                </select>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Save Officer</button>
-                        </form>
-                        <div id="officerAlert" class="alert mt-3" style="display: none;"></div>
-                    </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="updateReport()">Save Changes</button>
                 </div>
             </div>
         </div>
@@ -200,9 +303,535 @@
 
     <!-- Bootstrap JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Leaflet JS for maps -->
+    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <!-- Custom JS -->
     <script src="app.js"></script>
+    <script>
+        let map;
+        let policeStations = [];
+        let recentReports = [];
+        let crimeCircles = [];
+        let stationMarkers = [];
+        let editMap;
+        let editMarker;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            initMap();
+            loadPoliceStations();
+            loadRecentReports();
+            loadAllReports();
+            loadPoliceOfficers();
+            loadCrimeStats();
+        });
+
+        function initMap() {
+            map = L.map('map').setView([27.7172, 85.3240], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+        }
+
+        async function loadPoliceStations() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE_URL}/police-stations/`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    policeStations = await response.json();
+                    displayPoliceStations();
+                    updateStationDropdowns();
+                }
+            } catch (error) {
+                console.error('Error loading police stations:', error);
+            }
+        }
+
+        function displayPoliceStations() {
+            // Clear existing markers
+            stationMarkers.forEach(marker => map.removeLayer(marker));
+            stationMarkers = [];
+
+            policeStations.forEach(station => {
+                const marker = L.marker([station.latitude, station.longitude], {
+                    icon: L.divIcon({
+                        className: 'station-marker',
+                        iconSize: [16, 16]
+                    })
+                }).bindPopup(`
+                    <strong>${station.name}</strong><br>
+                    Location: ${station.location}<br>
+                    Head: ${station.head.username}
+                `).addTo(map);
+                stationMarkers.push(marker);
+            });
+        }
+
+        async function loadRecentReports() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE_URL}/recent-reports/`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    recentReports = await response.json();
+                    displayRecentReports();
+                    displayReportLocations();
+                }
+            } catch (error) {
+                console.error('Error loading recent reports:', error);
+            }
+        }
+
+        function displayRecentReports() {
+            const container = document.getElementById('recentReports');
+            container.innerHTML = '';
+
+            if (recentReports.length === 0) {
+                container.innerHTML = '<div class="text-center">No recent reports</div>';
+                return;
+            }
+
+            recentReports.forEach(report => {
+                const item = document.createElement('a');
+                item.href = '#';
+                item.className = 'list-group-item list-group-item-action';
+                item.innerHTML = `
+                    <div class="d-flex w-100 justify-content-between">
+                        <h6 class="mb-1">Report #${report.id}</h6>
+                        <small>${new Date(report.created_at).toLocaleDateString()}</small>
+                    </div>
+                    <p class="mb-1">${report.crime_type}</p>
+                    <small>${report.description.substring(0, 50)}...</small>
+                `;
+                item.onclick = () => showReportDetails(report.id);
+                container.appendChild(item);
+            });
+        }
+
+        function displayReportLocations() {
+            // Clear existing circles
+            crimeCircles.forEach(circle => map.removeLayer(circle));
+            crimeCircles = [];
+
+            recentReports.forEach(report => {
+                const circle = L.circle([report.latitude, report.longitude], {
+                    color: 'red',
+                    fillColor: '#dc3545',
+                    fillOpacity: 0.5,
+                    radius: 200
+                }).bindPopup(`
+                    <strong>Report #${report.id}</strong><br>
+                    Type: ${report.crime_type}<br>
+                    Status: ${report.status}
+                `).addTo(map);
+
+                crimeCircles.push(circle);
+            });
+        }
+
+        async function loadAllReports() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE_URL}/crime-reports/`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const reports = await response.json();
+                    displayAllReports(reports);
+                }
+            } catch (error) {
+                console.error('Error loading reports:', error);
+            }
+        }
+
+        function displayAllReports(reports) {
+            const tbody = document.getElementById('reportsTableBody');
+            tbody.innerHTML = '';
+
+            if (reports.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center">No reports found</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            reports.forEach(report => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${report.id}</td>
+                    <td>${report.crime_type}</td>
+                    <td>${report.description.substring(0, 50)}...</td>
+                    <td><span class="badge bg-${getStatusColor(report.status)}">${report.status}</span></td>
+                    <td>${report.police_station ? report.police_station.name : 'Not Assigned'}</td>
+                    <td>${new Date(report.created_at).toLocaleDateString()}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary me-1" onclick="editReport(${report.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-sm btn-info" onclick="openAssignStationModal(${report.id})">
+                            <i class="fas fa-building"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function getStatusColor(status) {
+            switch (status) {
+                case 'pending': return 'warning';
+                case 'under_progress': return 'info';
+                case 'concluded': return 'success';
+                default: return 'secondary';
+            }
+        }
+
+        async function loadPoliceOfficers() {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    console.error('No authentication token found');
+                    return;
+                }
+
+                console.log('Fetching police users...');
+                const response = await fetch(`${API_BASE_URL}/police-users/`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                console.log('Response status:', response.status);
+                if (response.ok) {
+                    const officers = await response.json();
+                    console.log('Received officers:', officers);
+                    updateOfficerDropdown(officers);
+                } else {
+                    const errorData = await response.json();
+                    console.error('Error response:', errorData);
+                    alert('Failed to load police officers: ' + (errorData.detail || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error loading police officers:', error);
+                alert('An error occurred while loading police officers');
+            }
+        }
+
+        function updateOfficerDropdown(officers) {
+            const select = document.getElementById('stationHead');
+            if (!select) {
+                console.error('Station head select element not found');
+                return;
+            }
+
+            select.innerHTML = '<option value="">Select Station Head</option>';
+            
+            if (!officers || officers.length === 0) {
+                console.log('No officers to display');
+                return;
+            }
+
+            officers.forEach(officer => {
+                const option = document.createElement('option');
+                option.value = officer.id;
+                option.textContent = `${officer.username} (${officer.police_id || 'No ID'})`;
+                select.appendChild(option);
+            });
+        }
+
+        function updateStationDropdowns() {
+            const selects = [
+                document.getElementById('policeStation'),
+                document.getElementById('editPoliceStation')
+            ];
+
+            selects.forEach(select => {
+                if (select) {
+                    select.innerHTML = '<option value="">Not Assigned</option>';
+                    policeStations.forEach(station => {
+                        const option = document.createElement('option');
+                        option.value = station.id;
+                        option.textContent = station.name;
+                        select.appendChild(option);
+                    });
+                }
+            });
+        }
+
+        async function editReport(reportId) {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE_URL}/crime-reports/${reportId}/`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const report = await response.json();
+                    document.getElementById('editReportId').value = report.id;
+                    document.getElementById('editCrimeType').value = report.crime_type;
+                    document.getElementById('editDescription').value = report.description;
+                    document.getElementById('editStatus').value = report.status;
+                    document.getElementById('editPoliceStation').value = report.police_station ? report.police_station.id : '';
+                    document.getElementById('editAddress').value = report.address;
+                    document.getElementById('editLatitude').value = report.latitude;
+                    document.getElementById('editLongitude').value = report.longitude;
+                    
+                    // Initialize map if not already initialized
+                    if (!editMap) {
+                        editMap = L.map('editMap').setView([report.latitude, report.longitude], 13);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '© OpenStreetMap contributors'
+                        }).addTo(editMap);
+
+                        // Add click event to map
+                        editMap.on('click', function(e) {
+                            if (editMarker) {
+                                editMap.removeLayer(editMarker);
+                            }
+                            editMarker = L.marker(e.latlng).addTo(editMap);
+                            
+                            // Format coordinates to 6 decimal places
+                            const lat = parseFloat(e.latlng.lat.toFixed(6));
+                            const lng = parseFloat(e.latlng.lng.toFixed(6));
+                            
+                            document.getElementById('editLatitude').value = lat;
+                            document.getElementById('editLongitude').value = lng;
+                        });
+                    } else {
+                        editMap.setView([report.latitude, report.longitude], 13);
+                    }
+
+                    // Add marker for current location
+                    if (editMarker) {
+                        editMap.removeLayer(editMarker);
+                    }
+                    editMarker = L.marker([report.latitude, report.longitude]).addTo(editMap);
+                    
+                    new bootstrap.Modal(document.getElementById('editReportModal')).show();
+                }
+            } catch (error) {
+                console.error('Error loading report:', error);
+            }
+        }
+
+        async function updateReport() {
+            const reportId = document.getElementById('editReportId').value;
+            const formData = {
+                status: document.getElementById('editStatus').value,
+                output: document.getElementById('editDescription').value,
+                police_notes: `Updated by ${localStorage.getItem('username')} at ${new Date().toLocaleString()}`,
+                conclusion_date: document.getElementById('editStatus').value === 'concluded' ? new Date().toISOString() : null,
+                police_station: document.getElementById('editPoliceStation').value || null
+            };
+
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE_URL}/crime-reports/${reportId}/update-status/`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    loadAllReports();
+                    bootstrap.Modal.getInstance(document.getElementById('editReportModal')).hide();
+                } else {
+                    const data = await response.json();
+                    console.error('Update failed:', data);
+                    alert(data.detail || 'Failed to update report');
+                }
+            } catch (error) {
+                console.error('Error updating report:', error);
+                alert('An error occurred while updating the report');
+            }
+        }
+
+        async function loadCrimeStats() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE_URL}/crime-stats/`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const stats = await response.json();
+                    createCharts(stats);
+                }
+            } catch (error) {
+                console.error('Error loading crime stats:', error);
+            }
+        }
+
+        function createCharts(stats) {
+            // Crime Type Chart
+            const crimeTypeCtx = document.getElementById('crimeTypeChart').getContext('2d');
+            new Chart(crimeTypeCtx, {
+                type: 'bar',
+                data: {
+                    labels: stats.crime_types.map(item => item.crime_type),
+                    datasets: [{
+                        label: 'Number of Reports',
+                        data: stats.crime_types.map(item => item.count),
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 2,
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Crime Types Distribution',
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            }
+                        },
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Crime Location Chart
+            const locationCtx = document.getElementById('crimeLocationChart').getContext('2d');
+            new Chart(locationCtx, {
+                type: 'pie',
+                data: {
+                    labels: stats.hotspots.map(item => item.address),
+                    datasets: [{
+                        data: stats.hotspots.map(item => item.count),
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.7)',
+                            'rgba(54, 162, 235, 0.7)',
+                            'rgba(255, 206, 86, 0.7)',
+                            'rgba(75, 192, 192, 0.7)',
+                            'rgba(153, 102, 255, 0.7)',
+                            'rgba(255, 159, 64, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Crime Hotspots Distribution',
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            }
+                        },
+                        legend: {
+                            position: 'right',
+                            labels: {
+                                boxWidth: 12,
+                                padding: 15
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function createPoliceStation() {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    console.error('No authentication token found');
+                    alert('Please log in to create a police station');
+                    return;
+                }
+
+                const formData = {
+                    name: document.getElementById('stationName').value,
+                    location: document.getElementById('stationLocation').value,
+                    latitude: parseFloat(document.getElementById('stationLatitude').value),
+                    longitude: parseFloat(document.getElementById('stationLongitude').value),
+                    head: document.getElementById('stationHead').value
+                };
+
+                console.log('Creating police station with data:', formData);
+
+                const response = await fetch(`${API_BASE_URL}/police-stations/`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                console.log('Response status:', response.status);
+                const data = await response.json();
+                console.log('Response data:', data);
+
+                if (response.ok) {
+                    alert('Police station created successfully!');
+                    bootstrap.Modal.getInstance(document.getElementById('createStationModal')).hide();
+                    loadPoliceStations(); // Refresh the list
+                } else {
+                    let errorMessage = 'Failed to create police station: ';
+                    if (data.error) {
+                        errorMessage = data.error;
+                    } else if (data.detail) {
+                        errorMessage += data.detail;
+                    } else {
+                        errorMessage += JSON.stringify(data);
+                    }
+                    alert(errorMessage);
+                }
+            } catch (error) {
+                console.error('Error creating police station:', error);
+                alert('An error occurred while creating the police station');
+            }
+        }
+    </script>
 </body>
 </html> 

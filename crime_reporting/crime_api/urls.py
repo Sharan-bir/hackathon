@@ -4,7 +4,7 @@ from .views import (
     UserRegistrationView, CrimeReportViewSet, PoliceStationViewSet,
     PoliceTeamViewSet, ReportAssignmentView, UpdateReportStatusView,
     RecentCrimeReportsView, CrimeStatsView, DashboardView, ManagePolicemanView,
-    CustomTokenObtainPairView
+    CustomTokenObtainPairView, PoliceUsersListView
 )
 
 router = DefaultRouter()
@@ -23,4 +23,5 @@ urlpatterns = [
     path('dashboard/', DashboardView.as_view(), name='dashboard'),
     path('manage-policemen/', ManagePolicemanView.as_view(), name='manage-policemen'),
     path('manage-policemen/<str:username>/', ManagePolicemanView.as_view(), name='manage-policeman-detail'),
+    path('police-users/', PoliceUsersListView.as_view(), name='police-users'),
 ]

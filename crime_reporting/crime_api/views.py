@@ -1,7 +1,7 @@
 from rest_framework import generics, status, viewsets
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django_filters.rest_framework import DjangoFilterBackend
 from .models import User, PoliceStation, CrimeReport, PoliceTeam, ReportAssignment
 from .serializers import (
@@ -30,17 +30,21 @@ class UserRegistrationView(generics.CreateAPIView):
 class CrimeReportViewSet(viewsets.ModelViewSet):
     queryset = CrimeReport.objects.all()
     serializer_class = CrimeReportSerializer
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['status', 'crime_type', 'police_station']
 
     def get_permissions(self):
-        if self.action in ['create','retrieve','list']:
-            permission_classes = [IsAuthenticated, IsUser]
+        if self.action in ['create', 'list', 'retrieve']:
+            if self.request.user.user_type in [2, 3]:  # Police or Department
+                permission_classes = [IsAuthenticated, IsPoliceOrDepartment]
+            else:
+                permission_classes = [IsAuthenticated, IsUser]
         elif self.action in ['update', 'partial_update', 'destroy']:
-            permission_classes = [IsAuthenticated, IsReportOwner,IsPoliceOrDepartment]
-        elif self.action in ['retrieve']:
-            permission_classes = [IsAuthenticated]
+            if self.request.user.user_type in [2, 3]:  # Police or Department
+                permission_classes = [IsAuthenticated, IsPoliceOrDepartment]
+            else:
+                permission_classes = [IsAuthenticated, IsReportOwner]
         else:
             permission_classes = [IsAuthenticated, IsPoliceOrDepartment]
         return [permission() for permission in permission_classes]
@@ -62,6 +66,17 @@ class CrimeReportViewSet(viewsets.ModelViewSet):
         elif user.user_type == 3:  # Department
             return queryset
         return queryset.none()
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data)
+
+    def perform_update(self, serializer):
+        serializer.save()
 
 class RecentCrimeReportsView(generics.ListAPIView):
     serializer_class = CrimeReportSerializer
@@ -90,6 +105,32 @@ class PoliceStationViewSet(viewsets.ModelViewSet):
         else:
             permission_classes = [IsAuthenticated]
         return [permission() for permission in permission_classes]
+
+    def create(self, request, *args, **kwargs):
+        # Check if the selected head is already a station head
+        head_id = request.data.get('head')
+        if head_id:
+            existing_station = PoliceStation.objects.filter(head_id=head_id).first()
+            if existing_station:
+                return Response(
+                    {'error': f'This police officer is already the head of {existing_station.name}'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        
+        return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        # Check if the selected head is already a station head of a different station
+        head_id = request.data.get('head')
+        if head_id:
+            existing_station = PoliceStation.objects.filter(head_id=head_id).exclude(id=kwargs.get('pk')).first()
+            if existing_station:
+                return Response(
+                    {'error': f'This police officer is already the head of {existing_station.name}'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        
+        return super().update(request, *args, **kwargs)
 
 class PoliceTeamViewSet(viewsets.ModelViewSet):
     queryset = PoliceTeam.objects.all()
@@ -130,7 +171,7 @@ class ReportAssignmentView(generics.CreateAPIView):
 class UpdateReportStatusView(generics.UpdateAPIView):
     queryset = CrimeReport.objects.all()
     serializer_class = CrimeReportUpdateSerializer
-    permission_classes = [IsAuthenticated, IsStationHead]
+    permission_classes = [IsAuthenticated, IsPoliceOrDepartment]
 
     def update(self, request, *args, **kwargs):
         instance = self.get_object()
@@ -317,3 +358,10 @@ class ManagePolicemanView(generics.GenericAPIView):
         policemen = User.objects.filter(managed_station=station)
         serializer = self.get_serializer(policemen, many=True)
         return Response(serializer.data)
+
+class PoliceUsersListView(generics.ListAPIView):
+    serializer_class = PolicemanSerializer
+    permission_classes = [IsAuthenticated, IsDepartment]
+
+    def get_queryset(self):
+        return User.objects.filter(user_type=2)  # Filter only police users

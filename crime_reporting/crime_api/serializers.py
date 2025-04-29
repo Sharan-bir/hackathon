@@ -67,7 +67,7 @@ class ReportAssignmentSerializer(serializers.ModelSerializer):
 class CrimeReportUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = CrimeReport
-        fields = ['status', 'output', 'police_notes', 'conclusion_date']
+        fields = ['status', 'output', 'police_notes', 'conclusion_date', 'police_station']
     
     def update(self, instance, validated_data):
         if validated_data.get('status') == 'concluded' and not instance.conclusion_date:
