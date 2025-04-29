@@ -35,10 +35,10 @@ class CrimeReportViewSet(viewsets.ModelViewSet):
     filterset_fields = ['status', 'crime_type', 'police_station']
 
     def get_permissions(self):
-        if self.action in ['create']:
+        if self.action in ['create','retrieve','list']:
             permission_classes = [IsAuthenticated, IsUser]
         elif self.action in ['update', 'partial_update', 'destroy']:
-            permission_classes = [IsAuthenticated, IsReportOwner]
+            permission_classes = [IsAuthenticated, IsReportOwner,IsPoliceOrDepartment]
         elif self.action in ['retrieve']:
             permission_classes = [IsAuthenticated]
         else:
@@ -71,7 +71,7 @@ class RecentCrimeReportsView(generics.ListAPIView):
         user = self.request.user
         queryset = CrimeReport.objects.all().order_by('-created_at')
         
-        if user.user_type == 2:  # Police
+        if user.user_type == 2:  # Police or Department
             station = PoliceStation.objects.filter(head=user).first()
             if station:
                 queryset = queryset.filter(police_station=station)
