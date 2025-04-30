@@ -361,7 +361,13 @@ class ManagePolicemanView(generics.GenericAPIView):
 
 class PoliceUsersListView(generics.ListAPIView):
     serializer_class = PolicemanSerializer
-    permission_classes = [IsAuthenticated, IsDepartment]
+    permission_classes = [IsAuthenticated, IsPoliceOrDepartment]
 
     def get_queryset(self):
-        return User.objects.filter(user_type=2)  # Filter only police users
+        user = self.request.user
+        if user.user_type == 2:  # Police station head
+            station = PoliceStation.objects.filter(head=user).first()
+            if station:
+                return User.objects.filter(user_type=2, managed_station=station)
+            return User.objects.none()
+        return User.objects.filter(user_type=2)  # Department can see all police users

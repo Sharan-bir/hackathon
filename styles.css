@@ -1,4 +1,18 @@
 /* General Styles */
+
+
+/* Main colors */
+
+/* red: DC2626 */
+/* blue: 1E40AD */
+.bg-primary {
+    background-color: 1E40AD;
+}
+
+.btn-danger {
+    background-color: DC2626;
+}
+
 body {
     background-color: #f8f9fa;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -7,10 +21,29 @@ body {
 /* Hero Section */
 .hero-section {
     padding-top: 80px;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    position: relative;
+    background-color: #1a1483; /* Fallback */
     min-height: 100vh;
     display: flex;
     align-items: center;
+    overflow: hidden;
+}
+
+.hero-section::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url('./public/hero.jpg'); /* Replace with your image URL */
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    filter: brightness(0.5) blur(4px);
+    z-index: 0;
+}
+
+.hero-section > .container {
+    position: relative;
+    z-index: 1;
 }
 
 .hero-section h1 {

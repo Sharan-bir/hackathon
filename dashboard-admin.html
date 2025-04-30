@@ -60,7 +60,7 @@
         </div>
     </nav>
 
-    <div class="container-fluid py-4">
+    <div class="container py-4">
         <div class="row">
             <!-- Left Sidebar -->
             <div class="col-md-3">
@@ -315,6 +315,7 @@
         let stationMarkers = [];
         let editMap;
         let editMarker;
+        let userMarker;
 
         document.addEventListener('DOMContentLoaded', () => {
             checkAuth();
@@ -331,6 +332,28 @@
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors'
             }).addTo(map);
+
+            // Get user's current location
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const userLat = position.coords.latitude;
+                        const userLng = position.coords.longitude;
+                        
+                        // Add marker for user's current location
+                        userMarker = L.marker([userLat, userLng], {
+                            icon: L.divIcon({
+                                className: 'user-location-marker',
+                                html: '<div style="background-color: #4285F4; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>',
+                                iconSize: [16, 16]
+                            })
+                        }).bindPopup('Your Current Location').addTo(map);
+                    },
+                    (error) => {
+                        console.error('Error getting location:', error);
+                    }
+                );
+            }
         }
 
         async function loadPoliceStations() {
@@ -618,11 +641,34 @@
                         editMap.setView([report.latitude, report.longitude], 13);
                     }
 
-                    // Add marker for current location
+                    // Clear existing markers
                     if (editMarker) {
                         editMap.removeLayer(editMarker);
                     }
-                    editMarker = L.marker([report.latitude, report.longitude]).addTo(editMap);
+
+                    // Add marker for report location
+                    editMarker = L.marker([report.latitude, report.longitude], {
+                        icon: L.divIcon({
+                            className: 'report-marker',
+                            html: '<div style="background-color: #dc3545; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>',
+                            iconSize: [16, 16]
+                        })
+                    }).bindPopup('Report Location').addTo(editMap);
+
+                    // Add markers for nearby police stations
+                    policeStations.forEach(station => {
+                        const stationMarker = L.marker([station.latitude, station.longitude], {
+                            icon: L.divIcon({
+                                className: 'station-marker',
+                                html: '<div style="background-color: #28a745; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>',
+                                iconSize: [16, 16]
+                            })
+                        }).bindPopup(`
+                            <strong>${station.name}</strong><br>
+                            Location: ${station.location}<br>
+                            Head: ${station.head.username}
+                        `).addTo(editMap);
+                    });
                     
                     new bootstrap.Modal(document.getElementById('editReportModal')).show();
                 }

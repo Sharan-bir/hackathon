@@ -40,13 +40,13 @@
     <!-- Main Content -->
     <div class="container py-5">
         <div class="row">
-            <div class="col-lg-8 mx-auto">
+            <div class="col-lg-11 mx-auto">
                 <div class="card shadow">
                     <div class="card-header bg-primary text-white">
                         <h4 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Report a Crime</h4>
                     </div>
                     <div class="card-body">
-                        <form id="reportForm">
+                        <form id="reportForm" action="dashboard-user.html">
                             <div class="mb-3">
                                 <label for="crimeType" class="form-label">Crime Type</label>
                                 <select class="form-select" id="crimeType" required>
@@ -67,9 +67,9 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="address" class="form-label">Location Address</label>
+                                <label for="address" class="form-label">Location Landmark</label>
                                 <input type="text" class="form-control" id="address" required 
-                                    placeholder="Enter the location where the crime occurred">
+                                    placeholder="Provide a landmark for easier identification">
                             </div>
 
                             <div class="mb-3">
@@ -118,8 +118,8 @@
         // Initialize map
         let map;
         let marker;
-        let latitude = 27.7172; // Default latitude (Kathmandu)
-        let longitude = 85.3240; // Default longitude (Kathmandu)
+        let latitude = 12.9716; // Default latitude (Bengaluru)
+        let longitude = 77.5946; // Default longitude (Bengaluru)
 
         document.addEventListener('DOMContentLoaded', () => {
             // Initialize map
@@ -127,6 +127,37 @@
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors'
             }).addTo(map);
+
+            // Get user's current location
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const userLat = position.coords.latitude;
+                        const userLng = position.coords.longitude;
+                        
+                        // Update map view to user's location
+                        map.setView([userLat, userLng], 13);
+                        
+                        // Add marker for user's current location
+                        const userMarker = L.marker([userLat, userLng], {
+                            icon: L.divIcon({
+                                className: 'user-location-marker',
+                                html: '<div style="background-color: #4285F4; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>',
+                                iconSize: [16, 16]
+                            })
+                        }).addTo(map);
+                        
+                        // Set initial coordinates in form
+                        document.getElementById('latitude').value = userLat.toFixed(6);
+                        document.getElementById('longitude').value = userLng.toFixed(6);
+                    },
+                    (error) => {
+                        console.error('Error getting location:', error);
+                        // Fallback to default location if geolocation fails
+                        map.setView([latitude, longitude], 13);
+                    }
+                );
+            }
 
             // Add click event to map
             map.on('click', function(e) {
@@ -218,9 +249,9 @@
                     submitButton.disabled = true;
 
                     // Redirect after a short delay
-                    setTimeout(() => {
-                        window.location.replace('dashboard-user.html');
-                    }, 1500);
+                    window.location.replace('dashboard-user.html');
+                    // setTimeout(() => {
+                    // }, 1500);
                 } else {
                     let errorMessage = 'Failed to submit report';
                     if (data.detail) {

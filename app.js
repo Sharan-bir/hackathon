@@ -162,9 +162,9 @@ async function handleRegister(e) {
         if (response.ok) {
             console.log('Registration successful');
             showAlert(registerAlert, 'Registration successful! Redirecting to login...', 'success');
-            setTimeout(() => {
-                window.location.href = redirectPage;
-            }, 1500);
+            window.location.href = redirectPage;
+            // setTimeout(() => {
+            // }, 1500);
         } else {
             console.error('Registration failed:', data.detail);
             showAlert(registerAlert, data.detail || 'Registration failed. Please try again.', 'danger');

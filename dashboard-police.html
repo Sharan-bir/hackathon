@@ -5,14 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Police Dashboard - Crime Reporting System</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="styles.css" rel="stylesheet">
-    <!-- Leaflet CSS for maps -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="styles.css" rel="stylesheet">
+    <style>
+        .map-container {
+            height: 400px;
+            margin-bottom: 20px;
+        }
+        .station-marker {
+            background-color: #28a745;
+            border-radius: 50%;
+            width: 12px;
+            height: 12px;
+            border: 2px solid white;
+        }
+        .report-marker {
+            background-color: #dc3545;
+            border-radius: 50%;
+            width: 8px;
+            height: 8px;
+            border: 2px solid white;
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
         <div class="container">
-            <a class="navbar-brand" href="#">Crime Reporting System</a>
+            <a class="navbar-brand" href="index.html">
+                <i class="fas fa-shield-alt me-2"></i>Crime Reporting System
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -26,39 +48,104 @@
                     </li>
                 </ul>
                 <div class="d-flex">
-                    <button class="btn btn-outline-light" id="logoutBtn">Logout</button>
+                    <button class="btn btn-outline-light" onclick="handleLogout()">
+                        <i class="fas fa-sign-out-alt me-2"></i>Logout
+                    </button>
                 </div>
             </div>
         </div>
     </nav>
 
-    <div class="container mt-4">
-        <div class="row">
+    <div class="container py-4">
+        <div class="row mb-4">
+            <div class="col">
+                <h2>Welcome, <span id="username">Police Officer</span>!</h2>
+                <p class="text-muted">Here's an overview of your station's reports and activities.</p>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Reports</h5>
+                        <h2 class="card-text" id="totalReports">0</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Pending</h5>
+                        <h2 class="card-text" id="pendingReports">0</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">In Progress</h5>
+                        <h2 class="card-text" id="progressReports">0</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Resolved</h5>
+                        <h2 class="card-text" id="resolvedReports">0</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Map Section -->
+        <div class="row mb-4">
             <div class="col-12">
-                <h2 class="mb-4">Police Station Dashboard</h2>
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Station Reports Map</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="map" class="map-container"></div>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- Recent Reports -->
         <div class="row mb-4">
             <div class="col-12">
-                <h4>Recent Reports</h4>
-                <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Report ID</th>
-                                <th>Crime Type</th>
-                                <th>Description</th>
-                                <th>Status</th>
-                                <th>Date</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="recentReportsTable">
-                            <!-- Recent reports will be loaded here -->
-                        </tbody>
-                    </table>
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Recent Reports (Last 5)</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Report ID</th>
+                                        <th>Crime Type</th>
+                                        <th>Description</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="recentReportsTable">
+                                    <tr>
+                                        <td colspan="6" class="text-center">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -66,85 +153,137 @@
         <!-- All Reports -->
         <div class="row mb-4">
             <div class="col-12">
-                <h4>All Reports</h4>
-                <div class="table-responsive">
-                    <table class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>Report ID</th>
-                                <th>Crime Type</th>
-                                <th>Description</th>
-                                <th>Status</th>
-                                <th>Date</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="allReportsTable">
-                            <!-- All reports will be loaded here -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-
-        <!-- Team Management Modal -->
-        <div class="modal fade" id="teamModal" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Manage Police Team</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">All Station Reports</h5>
                     </div>
-                    <div class="modal-body">
-                        <form id="teamForm">
-                            <div class="mb-3">
-                                <label class="form-label">Select Police Officers</label>
-                                <select class="form-select" id="policeOfficers" multiple required>
-                                    <!-- Police officers will be loaded here -->
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Team Name</label>
-                                <input type="text" class="form-control" id="teamName" required>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Create Team</button>
-                        </form>
-                        <div id="teamAlert" class="alert mt-3" style="display: none;"></div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Report ID</th>
+                                        <th>Crime Type</th>
+                                        <th>Description</th>
+                                        <th>Status</th>
+                                        <th>Assigned Team</th>
+                                        <th>Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="allReportsTable">
+                                    <tr>
+                                        <td colspan="7" class="text-center">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- Report Update Modal -->
-        <div class="modal fade" id="updateReportModal" tabindex="-1">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">Update Report Status</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <form id="updateReportForm">
-                            <input type="hidden" id="reportId">
-                            <div class="mb-3">
-                                <label class="form-label">Status</label>
-                                <select class="form-select" id="reportStatus" required>
-                                    <option value="under_progress">Under Progress</option>
-                                    <option value="concluded">Concluded</option>
-                                </select>
+    <!-- Team Management Modal -->
+    <div class="modal fade" id="teamModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Manage Police Team</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="teamForm">
+                        <div class="mb-3">
+                            <label class="form-label">Select Police Officers</label>
+                            <select class="form-select" id="policeOfficers" multiple required>
+                                <!-- Police officers will be loaded here -->
+                            </select>
+                            <small class="text-muted">Hold Ctrl/Cmd to select multiple officers</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Team Name</label>
+                            <input type="text" class="form-control" id="teamName" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Create Team</button>
+                    </form>
+                    <div id="teamAlert" class="alert mt-3" style="display: none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Details Modal -->
+    <div class="modal fade" id="reportModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Report Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="reportForm">
+                        <input type="hidden" id="reportId">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Report ID:</strong> <span id="modalReportId"></span></p>
+                                <p><strong>Crime Type:</strong> <span id="modalCrimeType"></span></p>
+                                <p><strong>Status:</strong> <span id="modalStatus"></span></p>
+                                <p><strong>Date:</strong> <span id="modalDate"></span></p>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">Output</label>
-                                <textarea class="form-control" id="reportOutput" rows="4"></textarea>
+                            <div class="col-md-6">
+                                <p><strong>Location:</strong> <span id="modalLocation"></span></p>
+                                <p><strong>Latitude:</strong> <span id="modalLatitude"></span></p>
+                                <p><strong>Longitude:</strong> <span id="modalLongitude"></span></p>
                             </div>
-                            <div class="mb-3">
-                                <label class="form-label">Conclusion Date</label>
-                                <input type="date" class="form-control" id="conclusionDate">
-                            </div>
-                            <button type="submit" class="btn btn-primary">Update Report</button>
-                        </form>
-                        <div id="updateAlert" class="alert mt-3" style="display: none;"></div>
-                    </div>
+                        </div>
+                        <div class="mt-3">
+                            <h6>Description:</h6>
+                            <p id="modalDescription"></p>
+                        </div>
+                        <div class="mt-3" id="modalImageContainer">
+                            <h6>Image:</h6>
+                            <img id="modalImage" class="img-fluid rounded" style="max-height: 200px;" alt="image">
+                        </div>
+                        <div class="mt-3">
+                            <label for="reportStatus" class="form-label">Update Status</label>
+                            <select class="form-select" id="reportStatus" required>
+                                <option value="pending">Pending</option>
+                                <option value="under_progress">Under Progress</option>
+                                <option value="concluded">Concluded</option>
+                            </select>
+                        </div>
+                        <div class="mt-3">
+                            <label for="reportOutput" class="form-label">Report Output</label>
+                            <select class="form-select" id="reportOutput" required>
+                                <option value="">Select Output</option>
+                                <option value="positive">Positive</option>
+                                <option value="negative">Negative</option>
+                            </select>
+                        </div>
+                        <div class="mt-3">
+                            <label for="policeNotes" class="form-label">Detailed Description</label>
+                            <textarea class="form-control" id="policeNotes" rows="4" placeholder="Enter detailed description of the investigation and findings..."></textarea>
+                        </div>
+                        <div class="mt-3">
+                            <label for="conclusionDate" class="form-label">Conclusion Date</label>
+                            <input type="datetime-local" class="form-control" id="conclusionDate">
+                        </div>
+                        <div class="mt-3">
+                            <label for="assignedTeam" class="form-label">Assign Team</label>
+                            <select class="form-select" id="assignedTeam">
+                                <option value="">Select Team</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="updateReport()">Save Changes</button>
                 </div>
             </div>
         </div>
@@ -152,9 +291,414 @@
 
     <!-- Bootstrap JS Bundle with Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Leaflet JS for maps -->
+    <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <!-- Custom JS -->
     <script src="app.js"></script>
+    <script>
+        let map;
+        let reportMarkers = [];
+        let stationMarker;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuth();
+            loadUserData();
+            initMap();
+            loadRecentReports();
+            loadAllReports();
+            loadPoliceTeams();
+            loadPoliceOfficers();
+        });
+
+        function initMap() {
+            map = L.map('map').setView([27.7172, 85.3240], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+        }
+
+        function loadUserData() {
+            const username = localStorage.getItem('username');
+            if (username) {
+                document.getElementById('username').textContent = username;
+            }
+        }
+
+        async function loadRecentReports() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE_URL}/recent-reports/`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const reports = await response.json();
+                    displayRecentReports(reports);
+                    displayReportLocations(reports);
+                }
+            } catch (error) {
+                console.error('Error loading recent reports:', error);
+            }
+        }
+
+        async function loadAllReports() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE_URL}/crime-reports/`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const reports = await response.json();
+                    displayAllReports(reports);
+                    updateStatistics(reports);
+                }
+            } catch (error) {
+                console.error('Error loading reports:', error);
+            }
+        }
+
+        function displayRecentReports(reports) {
+            const tbody = document.getElementById('recentReportsTable');
+            tbody.innerHTML = '';
+
+            if (reports.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="text-center">No recent reports</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            reports.slice(0, 5).forEach(report => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${report.id}</td>
+                    <td>${report.crime_type}</td>
+                    <td>${report.description.substring(0, 50)}...</td>
+                    <td><span class="badge bg-${getStatusColor(report.status)}">${report.status}</span></td>
+                    <td>${new Date(report.created_at).toLocaleDateString()}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="showReportDetails(${report.id})">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function displayAllReports(reports) {
+            const tbody = document.getElementById('allReportsTable');
+            tbody.innerHTML = '';
+
+            if (reports.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center">No reports found</td>
+                    </tr>
+                `;
+                return;
+            }
+
+            reports.forEach(report => {
+                const row = document.createElement('tr');
+                const teamInfo = report.assigned_team ? 
+                    `<span class="badge bg-primary">${report.assigned_team.name}</span>` : 
+                    '<span class="badge bg-secondary">Not Assigned</span>';
+                
+                row.innerHTML = `
+                    <td>${report.id}</td>
+                    <td>${report.crime_type}</td>
+                    <td>${report.description ? report.description.substring(0, 50) + '...' : 'No description'}</td>
+                    <td><span class="badge bg-${getStatusColor(report.status)}">${report.status.replace('_', ' ').toUpperCase()}</span></td>
+                    <td>${teamInfo}</td>
+                    <td>${new Date(report.created_at).toLocaleString()}</td>
+                    <td>
+                        <button class="btn btn-sm btn-primary" onclick="showReportDetails(${report.id})">
+                            <i class="fas fa-eye"></i> View
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function displayReportLocations(reports) {
+            // Clear existing markers
+            reportMarkers.forEach(marker => map.removeLayer(marker));
+            reportMarkers = [];
+
+            reports.forEach(report => {
+                const marker = L.marker([report.latitude, report.longitude], {
+                    icon: L.divIcon({
+                        className: 'report-marker',
+                        html: `<div style="background-color: ${getStatusColor(report.status)}; width: 8px; height: 8px; border-radius: 50%; border: 2px solid white;"></div>`,
+                        iconSize: [12, 12]
+                    })
+                }).bindPopup(`
+                    <strong>Report #${report.id}</strong><br>
+                    Type: ${report.crime_type}<br>
+                    Status: ${report.status}
+                `).addTo(map);
+                reportMarkers.push(marker);
+            });
+        }
+
+        function updateStatistics(reports) {
+            const total = reports.length;
+            const pending = reports.filter(r => r.status === 'pending').length;
+            const progress = reports.filter(r => r.status === 'under_progress').length;
+            const resolved = reports.filter(r => r.status === 'concluded').length;
+
+            document.getElementById('totalReports').textContent = total;
+            document.getElementById('pendingReports').textContent = pending;
+            document.getElementById('progressReports').textContent = progress;
+            document.getElementById('resolvedReports').textContent = resolved;
+        }
+
+        function getStatusColor(status) {
+            switch (status) {
+                case 'pending': return 'warning';
+                case 'under_progress': return 'info';
+                case 'concluded': return 'success';
+                default: return 'secondary';
+            }
+        }
+
+        async function showReportDetails(reportId) {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE_URL}/crime-reports/${reportId}/`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const report = await response.json();
+                    displayReportDetails(report);
+                }
+            } catch (error) {
+                console.error('Error loading report details:', error);
+            }
+        }
+
+        function displayReportDetails(report) {
+            document.getElementById('reportId').value = report.id;
+            document.getElementById('modalReportId').textContent = report.id;
+            document.getElementById('modalCrimeType').textContent = report.crime_type;
+            document.getElementById('modalStatus').textContent = report.status;
+            document.getElementById('modalDate').textContent = new Date(report.created_at).toLocaleString();
+            document.getElementById('modalLocation').textContent = report.address;
+            document.getElementById('modalLatitude').textContent = report.latitude;
+            document.getElementById('modalLongitude').textContent = report.longitude;
+            document.getElementById('modalDescription').textContent = report.description;
+            document.getElementById('reportStatus').value = report.status;
+            document.getElementById('reportOutput').value = report.output || '';
+            document.getElementById('policeNotes').value = report.police_notes || '';
+            document.getElementById('conclusionDate').value = report.conclusion_date ? new Date(report.conclusion_date).toISOString().slice(0, 16) : '';
+            document.getElementById('assignedTeam').value = report.assigned_team ? report.assigned_team.id : '';
+
+            const imageContainer = document.getElementById('modalImageContainer');
+            const imageElement = document.getElementById('modalImage');
+            if (report.image) {
+                imageElement.src = report.image;
+                imageContainer.style.display = 'block';
+            } else {
+                imageContainer.style.display = 'none';
+            }
+
+            new bootstrap.Modal(document.getElementById('reportModal')).show();
+        }
+
+        async function updateReport() {
+            const reportId = document.getElementById('reportId').value;
+            const conclusionDate = document.getElementById('conclusionDate').value;
+            
+            // Format the date properly for the server
+            const formData = {
+                status: document.getElementById('reportStatus').value,
+                output: document.getElementById('reportOutput').value,
+                police_notes: document.getElementById('policeNotes').value,
+                conclusion_date: conclusionDate ? new Date(conclusionDate).toISOString() : null,
+                assigned_team: document.getElementById('assignedTeam').value || null
+            };
+
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    throw new Error('No authentication token found');
+                }
+
+                const response = await fetch(`${API_BASE_URL}/crime-reports/${reportId}/update-status/`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    loadAllReports();
+                    loadRecentReports();
+                    bootstrap.Modal.getInstance(document.getElementById('reportModal')).hide();
+                } else {
+                    const text = await response.text();
+                    try {
+                        const data = JSON.parse(text);
+                        if (data.detail) {
+                            alert(`Error: ${data.detail}`);
+                        } else if (data.error) {
+                            alert(`Error: ${data.error}`);
+                        } else {
+                            alert(`Error: ${response.status} ${response.statusText}`);
+                        }
+                    } catch (e) {
+                        console.error('Server response:', text);
+                        alert('Error updating report. Please try again.');
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating report:', error);
+                alert(`Error updating report: ${error.message}`);
+            }
+        }
+
+        async function loadPoliceTeams() {
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE_URL}/police-teams/`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const teams = await response.json();
+                    updateTeamDropdown(teams);
+                }
+            } catch (error) {
+                console.error('Error loading police teams:', error);
+            }
+        }
+
+        function updateTeamDropdown(teams) {
+            const select = document.getElementById('assignedTeam');
+            select.innerHTML = '<option value="">Select Team</option>';
+            
+            teams.forEach(team => {
+                const option = document.createElement('option');
+                option.value = team.id;
+                option.textContent = team.name;
+                select.appendChild(option);
+            });
+        }
+
+        async function loadPoliceOfficers() {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    console.error('No authentication token found');
+                    return;
+                }
+
+                console.log('Fetching police users...');
+                const response = await fetch(`${API_BASE_URL}/police-users/`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                console.log('Response status:', response.status);
+                if (response.ok) {
+                    const officers = await response.json();
+                    console.log('Received officers:', officers);
+                    if (Array.isArray(officers)) {
+                        updateOfficerDropdown(officers);
+                    } else {
+                        console.error('Invalid response format:', officers);
+                        alert('Received invalid data format from server');
+                    }
+                } else {
+                    const errorData = await response.json();
+                    console.error('Error response:', errorData);
+                    alert('Failed to load police officers: ' + (errorData.detail || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error loading police officers:', error);
+                alert('An error occurred while loading police officers');
+            }
+        }
+
+        function updateOfficerDropdown(officers) {
+            console.log('Updating officer dropdown with:', officers);
+            const select = document.getElementById('policeOfficers');
+            if (!select) {
+                console.error('Police officers select element not found');
+                return;
+            }
+            
+            select.innerHTML = '';
+            
+            if (officers && officers.length > 0) {
+                officers.forEach(officer => {
+                    if (officer.id && officer.username) {
+                        const option = document.createElement('option');
+                        option.value = officer.id;
+                        option.textContent = `${officer.username} (${officer.police_id || 'No ID'})`;
+                        select.appendChild(option);
+                    }
+                });
+            } else {
+                const option = document.createElement('option');
+                option.disabled = true;
+                option.textContent = 'No police officers available';
+                select.appendChild(option);
+            }
+        }
+
+        document.getElementById('teamForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
+            
+            const formData = {
+                name: document.getElementById('teamName').value,
+                members: Array.from(document.getElementById('policeOfficers').selectedOptions).map(option => option.value)
+            };
+
+            try {
+                const token = localStorage.getItem('token');
+                const response = await fetch(`${API_BASE_URL}/police-teams/`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    loadPoliceTeams();
+                    bootstrap.Modal.getInstance(document.getElementById('teamModal')).hide();
+                    document.getElementById('teamForm').reset();
+                } else {
+                    const data = await response.json();
+                    alert(data.detail || 'Failed to create team');
+                }
+            } catch (error) {
+                console.error('Error creating team:', error);
+                alert('An error occurred while creating the team');
+            }
+        });
+    </script>
 </body>
-</html> 
+</html>

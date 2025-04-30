@@ -80,6 +80,20 @@
             </div>
         </div>
 
+        <!-- Map Section -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Your Location & Recent Reports</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="map" style="height: 400px; border-radius: 8px;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="card shadow">
             <div class="card-header bg-primary text-white">
                 <h4 class="mb-0"><i class="fas fa-list me-2"></i>Your Reports</h4>
@@ -112,12 +126,6 @@
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-12">
-            <h4>Crime Locations</h4>
-            <div id="map" style="height: 400px;"></div>
-        </div>
-    </div>
 
     <!-- Report Details Modal -->
     <div class="modal fade" id="reportModal" tabindex="-1">
@@ -147,7 +155,7 @@
                     </div>
                     <div class="mt-3" id="modalImageContainer">
                         <h6>Image:</h6>
-                        <img id="modalImage" class="img-fluid rounded" style="max-height: 200px;">
+                        <img id="modalImage" class="img-fluid rounded" style="max-height: 200px;" alt="image">
                     </div>
                 </div>
             </div>
@@ -161,6 +169,10 @@
     <!-- Custom JS -->
     <script src="app.js"></script>
     <script>
+        let map;
+        let userMarker;
+        let reportMarkers = [];
+
         document.addEventListener('DOMContentLoaded', () => {
             // Check authentication
             checkAuth();
@@ -168,9 +180,45 @@
             // Load user data
             loadUserData();
             
+            // Initialize map
+            initMap();
+            
             // Load reports
             loadReports();
         });
+
+        // Initialize map
+        function initMap() {
+            map = L.map('map').setView([27.7172, 85.3240], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Get user's current location
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const userLat = position.coords.latitude;
+                        const userLng = position.coords.longitude;
+                        
+                        // Update map view to user's location
+                        map.setView([userLat, userLng], 13);
+                        
+                        // Add marker for user's current location
+                        userMarker = L.marker([userLat, userLng], {
+                            icon: L.divIcon({
+                                className: 'user-location-marker',
+                                html: '<div style="background-color: #4285F4; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white;"></div>',
+                                iconSize: [16, 16]
+                            })
+                        }).addTo(map);
+                    },
+                    (error) => {
+                        console.error('Error getting location:', error);
+                    }
+                );
+            }
+        }
 
         // Load user data
         function loadUserData() {
@@ -194,6 +242,7 @@
                     const reports = await response.json();
                     updateStatistics(reports);
                     displayReports(reports);
+                    displayReportLocations(reports);
                 } else {
                     console.error('Failed to load reports');
                 }
@@ -206,7 +255,7 @@
         function updateStatistics(reports) {
             const total = reports.length;
             const pending = reports.filter(r => r.status === 'pending').length;
-            const progress = reports.filter(r => r.status === 'in_progress').length;
+            const progress = reports.filter(r => r.status === 'in_progress' || r.status === 'under_progress').length;
             const resolved = reports.filter(r => r.status === 'resolved').length;
 
             document.getElementById('totalReports').textContent = total;
@@ -244,6 +293,28 @@
                     </td>
                 `;
                 tbody.appendChild(row);
+            });
+        }
+
+        // Display report locations on map
+        function displayReportLocations(reports) {
+            // Clear existing markers
+            reportMarkers.forEach(marker => map.removeLayer(marker));
+            reportMarkers = [];
+
+            reports.forEach(report => {
+                const marker = L.marker([report.latitude, report.longitude], {
+                    icon: L.divIcon({
+                        className: 'report-marker',
+                        html: `<div style="background-color: ${getStatusColor(report.status)}; width: 8px; height: 8px; border-radius: 50%; border: 2px solid white;"></div>`,
+                        iconSize: [12, 12]
+                    })
+                }).bindPopup(`
+                    <strong>Report #${report.id}</strong><br>
+                    Type: ${report.crime_type}<br>
+                    Status: ${report.status}
+                `).addTo(map);
+                reportMarkers.push(marker);
             });
         }
 

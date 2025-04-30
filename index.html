@@ -12,8 +12,8 @@
     <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
         <div class="container">
-            <a class="navbar-brand" href="#">
-                <i class="fas fa-shield-alt me-2"></i>Crime Reporting System
+            <a class="navbar-brand" href="index.html">
+                <img src="./public/namma_logo.png" alt="logo" height="40px" width="auto"> Crime Reporting System
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -30,9 +30,6 @@
                         <a class="nav-link" href="#statistics">Statistics</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#contact">Contact</a>
-                    </li>
-                    <li class="nav-item">
                         <button class="btn btn-outline-light ms-2" data-bs-toggle="modal" data-bs-target="#loginModal">
                             <i class="fas fa-sign-in-alt me-2"></i>Login
                         </button>
@@ -46,21 +43,21 @@
     <section class="hero-section">
         <div class="container">
             <div class="row align-items-center min-vh-100">
-                <div class="col-lg-6">
-                    <h1 class="display-4 fw-bold mb-4">Report Crimes, Make Your Community Safer</h1>
-                    <p class="lead mb-4">Join our community in making your neighborhood a safer place. Report crimes anonymously and help law enforcement take action.</p>
+                <div class="col-lg d-flex flex-column justify-content-center align-items-center mb-5">
+                    <h1 class="text-white display-2 fw-bold mb-4">Make Your Community Safer</h1>
+                    <p class="text-white lead mb-4">Join our community in making your neighborhood a safer place. Report crimes and help law enforcement take action.</p>
                     <div class="d-flex gap-3">
-                        <button class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#loginModal">
-                            <i class="fas fa-sign-in-alt me-2"></i>Login
+                        <!-- <a href="register-user.html" class="btn btn-danger btn-lg">
+                            <i class="fas fa-user-plus me-2"></i>Report Emergency
+                        </a> -->
+                        <button class="btn btn-danger btn-lg px-5 py-2 fs-4" data-bs-toggle="modal" data-bs-target="#loginModal">
+                            <i class="fas fa-user me-2"></i>Report a Crime
                         </button>
-                        <a href="register-user.html" class="btn btn-outline-primary btn-lg">
-                            <i class="fas fa-user-plus me-2"></i>Register
-                        </a>
                     </div>
                 </div>
-                <div class="col-lg-6">
+                <!-- <div class="col-lg-6">
                     <img src="https://source.unsplash.com/random/600x400/?security" alt="Security" class="img-fluid rounded shadow-lg">
-                </div>
+                </div> -->
             </div>
         </div>
     </section>
@@ -184,7 +181,7 @@
     </section>
 
     <!-- Contact Section -->
-    <section id="contact" class="py-5">
+    <!-- <section id="contact" class="py-5">
         <div class="container">
             <h2 class="text-center mb-5">Contact Us</h2>
             <div class="row justify-content-center">
@@ -211,7 +208,7 @@
                 </div>
             </div>
         </div>
-    </section>
+    </section> -->
 
     <!-- Footer -->
     <footer class="bg-dark text-light py-4">
@@ -251,20 +248,20 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Select Login Type</h5>
+                    <h5 class="modal-title">Login / Register</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="d-grid gap-3">
                         <a href="login-user.html" class="btn btn-outline-primary btn-lg">
-                            <i class="fas fa-user me-2"></i>Regular User Login
+                            <i class="fas fa-user me-2"></i>User Login
                         </a>
-                        <a href="login-police.html" class="btn btn-outline-primary btn-lg">
-                            <i class="fas fa-shield-alt me-2"></i>Police Officer Login
+                        <a href="register-user.html" class="btn btn-outline-primary btn-lg">
+                            <i class="fas fa-shield-alt me-2"></i>User Registration
                         </a>
-                        <a href="login-admin.html" class="btn btn-outline-primary btn-lg">
+                        <!-- <a href="login-admin.html" class="btn btn-outline-primary btn-lg">
                             <i class="fas fa-user-shield me-2"></i>Department Admin Login
-                        </a>
+                        </a> -->
                     </div>
                 </div>
             </div>
